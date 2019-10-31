@@ -27,18 +27,25 @@
 
 #include "DFRobot_ESP_PH.h"
 #include "EEPROM.h"
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#define ONE_WIRE_BUS 4
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
 
 DFRobot_ESP_PH ph;
 #define ESPADC 4096.0   //the esp Analog Digital Convertion value
 #define ESPVOLTAGE 3300 //the esp voltage supply value
 #define PH_PIN 35		//the esp gpio data pin number
 float voltage, phValue, temperature = 25;
+unsigned long prevMillis = 0;
 
 void setup()
 {
 	Serial.begin(115200);
 	EEPROM.begin(32);//needed to permit storage of calibration value in eeprom
 	ph.begin();
+	sensors.begin();
 }
 
 void loop()
@@ -66,5 +73,9 @@ void loop()
 
 float readTemperature()
 {
-	//add your code here to get the temperature from your temperature sensor
+	if (millis() - prevMillis > 1000) {
+		prevMillis = millis();
+		sensors.requestTemperatures();	
+		Serial.print(sensors.getTempCByIndex(0));
+	}
 }
